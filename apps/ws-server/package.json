@@ -11,7 +11,8 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/jsonwebtoken": "^9.0.7"
+    "@types/jsonwebtoken": "^9.0.7",
+    "@repo/backend-common": "workspace:*"
   },
   "keywords": [],
   "author": "",
