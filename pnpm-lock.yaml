@@ -82,6 +82,9 @@ importers:
 
   apps/ws-server:
     dependencies:
+      '@repo/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@types/ws':
         specifier: ^8.5.13
         version: 8.5.13
@@ -103,13 +106,14 @@ importers:
         version: 9.0.7
 
   packages/backend-common:
+    dependencies:
+      '@types/node':
+        specifier: ^22.10.6
+        version: 22.10.6
     devDependencies:
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
-      '@types/node':
-        specifier: ^22.10.6
-        version: 22.10.6
 
   packages/common:
     dependencies:
@@ -126,13 +130,13 @@ importers:
       '@prisma/client':
         specifier: 6.2.1
         version: 6.2.1(prisma@6.2.1)
+      prisma:
+        specifier: ^6.2.1
+        version: 6.2.1
     devDependencies:
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
-      prisma:
-        specifier: ^6.2.1
-        version: 6.2.1
 
   packages/eslint-config:
     devDependencies:
