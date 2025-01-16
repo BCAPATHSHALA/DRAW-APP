@@ -2,36 +2,160 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "@repo/backend-common/config";
 import { middleware } from "./middleware.js";
-import { CreateUserSchema } from "@repo/common/types";
+import {
+  CreateRoomSchema,
+  CreateUserSchema,
+  SigninSchema,
+} from "@repo/common/types";
 import { prismaClient } from "@repo/db/client";
 
 const app = express();
+app.use(express.json());
 
 // Signup Route
-//@ts-ignore Todo: Fix this
 app.post("/signup", async (req, res) => {
-  // signup logic here
-  const data = CreateUserSchema.safeParse(req.body);
-  if (!data.success) {
-    return res.status(400).json({ message: "Invalid inputs" });
+  const parsedData = CreateUserSchema.safeParse(req.body);
+  if (!parsedData.success) {
+    console.log(parsedData.error);
+    res.json({
+      message: "Incorrect inputs",
+    });
+    return;
   }
-  res.json({ message: "User created successfully" });
+
+  try {
+    const user = await prismaClient.user.create({
+      data: {
+        email: parsedData.data?.username,
+        // TODO: Hash the password
+        password: parsedData.data.password,
+        name: parsedData.data.name,
+      },
+    });
+
+    res.json({
+      userId: user.id,
+    });
+  } catch (e) {
+    res.status(411).json({
+      message: "User already exists with this username",
+    });
+  }
 });
 
 // Signin Route
 app.post("/signin", async (req, res) => {
-  const userId = 1;
-  const token = jwt.sign({ userId }, JWT_SECRET, {
-    expiresIn: "1h",
-  });
+  const parsedData = SigninSchema.safeParse(req.body);
+  if (!parsedData.success) {
+    res.json({
+      message: "Incorrect inputs",
+    });
+    return;
+  }
 
-  res.status(200).json({ message: "user signed in", token: token });
+  try {
+    // TODO: Compare the hashed password
+    const user = await prismaClient.user.findFirst({
+      where: {
+        email: parsedData.data.username,
+        password: parsedData.data.password,
+      },
+    });
+
+    if (!user) {
+      res.status(403).json({
+        message: "Not authorized",
+      });
+      return;
+    }
+
+    const token = jwt.sign(
+      {
+        userId: user?.id,
+      },
+      JWT_SECRET
+    );
+
+    res.json({
+      token,
+    });
+  } catch (e) {
+    res.status(404).json({
+      message: "User not found",
+    });
+  }
 });
 
 // Create Room
-//@ts-ignore Todo : Fix the error
 app.post("/room", middleware, async (req, res) => {
-  // create room logic here
+  const parsedData = CreateRoomSchema.safeParse(req.body);
+  if (!parsedData.success) {
+    res.json({
+      message: "Incorrect inputs",
+    });
+    return;
+  }
+
+  //@ts-ignore TODO: Fix this
+  const userId = req.userId;
+
+  try {
+    const room = await prismaClient.room.create({
+      data: {
+        slug: parsedData.data.name,
+        adminId: userId,
+      },
+    });
+
+    res.json({
+      roomId: room.id,
+    });
+  } catch (e) {
+    res.status(411).json({
+      message: "Room already exists with this name",
+    });
+  }
+});
+
+// Get Chat History based on roomId
+app.get("/chats/:roomId", async (req, res) => {
+  try {
+    const roomId = Number(req.params.roomId);
+    console.log(req.params.roomId);
+
+    const messages = await prismaClient.chat.findMany({
+      where: {
+        roomId: roomId,
+      },
+      orderBy: {
+        id: "desc", // get latest messages
+      },
+      take: 50, // Get last 50 messages
+    });
+
+    res.json({
+      messages,
+    });
+  } catch (e) {
+    console.log(e);
+    res.json({
+      messages: [],
+    });
+  }
+});
+
+// Get room details
+app.get("/room/:slug", async (req, res) => {
+  const slug = req.params.slug;
+  const room = await prismaClient.room.findFirst({
+    where: {
+      slug,
+    },
+  });
+
+  res.json({
+    room,
+  });
 });
 
 app.listen(3001, () => {
