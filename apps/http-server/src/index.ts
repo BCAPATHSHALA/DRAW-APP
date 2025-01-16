@@ -3,11 +3,11 @@ import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "@repo/backend-common/config";
 import { middleware } from "./middleware.js";
 import { CreateUserSchema } from "@repo/common/types";
+import { prismaClient } from "@repo/db/client";
 
 const app = express();
 
 // Signup Route
-
 //@ts-ignore Todo: Fix this
 app.post("/signup", async (req, res) => {
   // signup logic here
