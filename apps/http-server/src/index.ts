@@ -17,7 +17,7 @@ app.post("/signup", async (req, res) => {
   const parsedData = CreateUserSchema.safeParse(req.body);
   if (!parsedData.success) {
     console.log(parsedData.error);
-    res.json({
+    res.status(403).json({
       message: "Incorrect inputs",
     });
     return;
@@ -47,7 +47,7 @@ app.post("/signup", async (req, res) => {
 app.post("/signin", async (req, res) => {
   const parsedData = SigninSchema.safeParse(req.body);
   if (!parsedData.success) {
-    res.json({
+    res.status(403).json({
       message: "Incorrect inputs",
     });
     return;
@@ -118,7 +118,7 @@ app.post("/room", middleware, async (req, res) => {
 });
 
 // Get Chat History based on roomId
-app.get("/chats/:roomId", async (req, res) => {
+app.get("/chats/:roomId", middleware, async (req, res) => {
   try {
     const roomId = Number(req.params.roomId);
     console.log(req.params.roomId);
@@ -145,7 +145,7 @@ app.get("/chats/:roomId", async (req, res) => {
 });
 
 // Get room details
-app.get("/room/:slug", async (req, res) => {
+app.get("/room/:slug", middleware, async (req, res) => {
   const slug = req.params.slug;
   const room = await prismaClient.room.findFirst({
     where: {
@@ -158,6 +158,6 @@ app.get("/room/:slug", async (req, res) => {
   });
 });
 
-app.listen(3001, () => {
-  console.log("Server is running on port 3001");
+app.listen(3011, () => {
+  console.log("Server is running on port 3011");
 });
